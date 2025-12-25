@@ -1,4 +1,4 @@
-import 'dotenv/config'; // loads .env automatically
+import 'dotenv/config';
 import {
   Client,
   GatewayIntentBits,
@@ -14,7 +14,7 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// 🔴 TOKEN & CLIENT_ID from environment variables
+// TOKEN & CLIENT_ID from .env
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 
@@ -82,3 +82,7 @@ client.on("interactionCreate", async interaction => {
 
 // LOGIN BOT
 client.login(TOKEN);
+
+// LOGIN BOT
+client.login(TOKEN);
+
