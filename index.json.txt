@@ -1,0 +1,84 @@
+import 'dotenv/config'; // loads .env automatically
+import {
+  Client,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+  EmbedBuilder,
+  REST,
+  Routes
+} from "discord.js";
+import fs from "fs";
+
+// CREATE BOT
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds]
+});
+
+// 🔴 TOKEN & CLIENT_ID from environment variables
+const TOKEN = process.env.TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+
+// LOAD DATABASE
+let db = {};
+if (fs.existsSync("./servers.json")) {
+  db = JSON.parse(fs.readFileSync("./servers.json", "utf8"));
+}
+
+// SLASH COMMAND
+const command = new SlashCommandBuilder()
+  .setName("createserver")
+  .setDescription("Create a free server");
+
+// REGISTER COMMAND
+const rest = new REST({ version: "10" }).setToken(TOKEN);
+(async () => {
+  try {
+    await rest.put(
+      Routes.applicationCommands(CLIENT_ID),
+      { body: [command.toJSON()] }
+    );
+    console.log("Slash command registered");
+  } catch (err) {
+    console.error(err);
+  }
+})();
+
+// BOT READY
+client.once("ready", () => {
+  console.log(`Bot online as ${client.user.tag}`);
+});
+
+// COMMAND LOGIC
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "createserver") {
+    const guildId = interaction.guildId;
+
+    if (db[guildId]) {
+      await interaction.reply({
+        content: "You already have a server created!",
+        ephemeral: true
+      });
+      return;
+    }
+
+    db[guildId] = {
+      owner: interaction.user.id,
+      createdAt: new Date().toISOString()
+    };
+
+    fs.writeFileSync("./servers.json", JSON.stringify(db, null, 2));
+
+    const embed = new EmbedBuilder()
+      .setTitle("Server Created!")
+      .setDescription(`Your free server has been created!`)
+      .setColor("Green")
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+  }
+});
+
+// LOGIN BOT
+client.login(TOKEN);
